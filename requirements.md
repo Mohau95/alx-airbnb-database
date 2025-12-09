@@ -1,70 +1,53 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
+# Airbnb Clone ERD Requirements
 
-# -------------------------------
-# USER ENTITY
-# -------------------------------
-class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('guest', 'Guest'),
-        ('host', 'Host'),
-    )
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='guest')
-    # username, email, password already included in AbstractUser
-    # add any extra fields here if needed
+## Entities
 
-    def __str__(self):
-        return self.username
+### User
+- id (Primary Key)
+- username
+- email
+- password
+- role (guest/host)
+- created_at
 
-# -------------------------------
-# PROPERTY ENTITY
-# -------------------------------
-class Property(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='properties')
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    location = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True)
+### Property
+- id (Primary Key)
+- owner_id (Foreign Key → User)
+- title
+- description
+- price
+- location
+- created_at
 
-    def __str__(self):
-        return self.title
+### Booking
+- id (Primary Key)
+- user_id (Foreign Key → User)
+- property_id (Foreign Key → Property)
+- start_date
+- end_date
+- status
+- created_at
 
-# -------------------------------
-# BOOKING ENTITY
-# -------------------------------
-class Booking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='bookings')
-    start_date = models.DateField()
-    end_date = models.DateField()
-    status = models.CharField(max_length=50, default='pending')  # pending, confirmed, cancelled
-    created_at = models.DateTimeField(auto_now_add=True)
+### Review
+- id (Primary Key)
+- user_id (Foreign Key → User)
+- property_id (Foreign Key → Property)
+- rating
+- comment
+- created_at
 
-    def __str__(self):
-        return f"{self.user.username} booking {self.property.title}"
+### Payment
+- id (Primary Key)
+- booking_id (Foreign Key → Booking)
+- amount
+- payment_date
+- payment_method
 
-# -------------------------------
-# REVIEW ENTITY
-# -------------------------------
-class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
-    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.PositiveIntegerField()  # 1-5 stars
-    comment = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+## Relationships
 
-    def __str__(self):
-        return f"{self.user.username} review on {self.property.title}"
-
-# -------------------------------
-# PAYMENT ENTITY
-# -------------------------------
-class Payment(models.Model):
-    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name='payment')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    payment_date = models.DateTimeField(auto_now_add=True)
-    payment_method = models.CharField(max_length=50)  # e.g., 'Credit Card', 'PayPal'
-
-    def __str__(self):
-        return f"Payment for {self.booking}"
+- User → Property (1:N)  
+- User → Booking (1:N)  
+- Property → Booking (1:N)  
+- Property → Review (1:N)  
+- Booking → Payment (1:1)  
+- User → Review (1:N)
